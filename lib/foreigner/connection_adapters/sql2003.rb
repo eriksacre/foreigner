@@ -46,7 +46,7 @@ module Foreigner
 
       def proper_table_name(table)
         # This will normally be a no-op, but prevents the table from being wrapped twice:
-        table = Foreigner::SchemaDumper::ClassMethods.remove_prefix_and_suffix(table)
+        # table = Foreigner::SchemaDumper::ClassMethods.remove_prefix_and_suffix(table)
         if ActiveRecord::Migration.instance_methods(false).include? :proper_table_name
           ActiveRecord::Migration.new.proper_table_name(table, options = {
             table_name_prefix: ActiveRecord::Base.table_name_prefix,
