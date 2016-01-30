@@ -1,8 +1,42 @@
 module Foreigner
   module SchemaDumper
-    extend ActiveSupport::Concern
+    def requires_foreigner_load?
+      major, minor, patch = Foreigner::Helper.active_record_version.segments
+      major == 4 && minor == 1 && patch >= 9
+    end
 
-    module ClassMethods
+    def tables(stream)
+      super
+
+      # Ensure Foreigner to be initialized before running foreign_keys.
+      # This is required since schema::load is not initializing the environment
+      # anymore in Rails 4.1.9 (https://github.com/rails/rails/commit/5d6bb89f)
+      stream.puts '  Foreigner.load' if requires_foreigner_load?
+      @connection.tables.sort.each do |table|
+        next if ['schema_migrations', ignore_tables].flatten.any? do |ignored|
+          case ignored
+          when String; table == ignored
+          when Regexp; table =~ ignored
+          else
+            raise StandardError, 'ActiveRecord::SchemaDumper.ignore_tables accepts an array of String and / or Regexp values.'
+          end
+        end
+        foreign_keys(table, stream)
+      end
+    end
+
+    private
+      def foreign_keys(table_name, stream)
+        if (foreign_keys = @connection.foreign_keys(table_name)).any?
+          add_foreign_key_statements = foreign_keys.map do |foreign_key|
+            '  ' + dump_foreign_key(foreign_key)
+          end
+
+          stream.puts add_foreign_key_statements.sort.join("\n")
+          stream.puts
+        end
+      end
+
       def dump_foreign_key(foreign_key)
         statement_parts = [ ('add_foreign_key ' + remove_prefix_and_suffix(foreign_key.from_table).inspect) ]
         statement_parts << remove_prefix_and_suffix(foreign_key.to_table).inspect
@@ -33,44 +67,6 @@ module Foreigner
           table_name
         end
       end
-      module_function :remove_prefix_and_suffix
-    end
 
-    def requires_foreigner_load?
-      major, minor, patch = Foreigner::Helper.active_record_version.segments
-      major == 4 && minor == 1 && patch >= 9
-    end
-
-    def tables(stream)
-      super
-
-      # Ensure Foreigner to be initialized before running foreign_keys.
-      # This is required since schema::load is not initializing the environment
-      # anymore in Rails 4.1.9 (https://github.com/rails/rails/commit/5d6bb89f)
-      stream.puts '  Foreigner.load' if requires_foreigner_load?
-      @connection.tables.sort.each do |table|
-        next if ['schema_migrations', ignore_tables].flatten.any? do |ignored|
-          case ignored
-          when String; table == ignored
-          when Regexp; table =~ ignored
-          else
-            raise StandardError, 'ActiveRecord::SchemaDumper.ignore_tables accepts an array of String and / or Regexp values.'
-          end
-        end
-        foreign_keys(table, stream)
-      end
-    end
-
-    private
-      def foreign_keys(table_name, stream)
-        if (foreign_keys = @connection.foreign_keys(table_name)).any?
-          add_foreign_key_statements = foreign_keys.map do |foreign_key|
-            '  ' + self.class.dump_foreign_key(foreign_key)
-          end
-
-          stream.puts add_foreign_key_statements.sort.join("\n")
-          stream.puts
-        end
-      end
   end
 end
