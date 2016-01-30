@@ -5,9 +5,7 @@ module Foreigner
       include Foreigner::ConnectionAdapters::SchemaDefinitions
     end
 
-    ActiveRecord::SchemaDumper.class_eval do
-      include Foreigner::SchemaDumper
-    end
+    ActiveRecord::SchemaDumper.prepend Foreigner::SchemaDumper
 
     if defined?(ActiveRecord::Migration::CommandRecorder)
       ActiveRecord::Migration::CommandRecorder.class_eval do

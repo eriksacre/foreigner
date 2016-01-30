@@ -2,10 +2,6 @@ module Foreigner
   module SchemaDumper
     extend ActiveSupport::Concern
 
-    included do
-      alias_method_chain :tables, :foreign_keys
-    end
-
     module ClassMethods
       def dump_foreign_key(foreign_key)
         statement_parts = [ ('add_foreign_key ' + remove_prefix_and_suffix(foreign_key.from_table).inspect) ]
@@ -45,8 +41,9 @@ module Foreigner
       major == 4 && minor == 1 && patch >= 9
     end
 
-    def tables_with_foreign_keys(stream)
-      tables_without_foreign_keys(stream)
+    def tables(stream)
+      super
+
       # Ensure Foreigner to be initialized before running foreign_keys.
       # This is required since schema::load is not initializing the environment
       # anymore in Rails 4.1.9 (https://github.com/rails/rails/commit/5d6bb89f)

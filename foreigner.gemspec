@@ -2,12 +2,12 @@
 
 Gem::Specification.new do |s|
   s.name = 'foreigner'
-  s.version = '1.7.4'
+  s.version = '1.7.5'
   s.licenses = ['MIT']
   s.summary = 'Foreign Keys for Rails'
   s.description = 'Adds helpers to migrations and dumps foreign keys to schema.rb'
 
-  s.required_ruby_version     = '>= 1.9.2'
+  s.required_ruby_version     = '>= 2.0.0'
   s.required_rubygems_version = '>= 1.3.5'
 
   s.author            = 'Matthew Higgins'

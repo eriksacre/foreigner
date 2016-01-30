@@ -9,11 +9,21 @@ The following adapters are supported:
 * postgres
 * sqlite (foreign key methods are a no-op)
 
+## Prepend branch
+
+This branch is patched to use a prepend to add the SchemaDumper into Rails. This is necessary because the current
+alias_method_chain combined with another Gem that uses prepend results in an infinite loop (FYI: the other gem
+I use is Thoughtbot's [Scenic](https://github.com/thoughtbot/scenic)).
+
+Using prepend does mean the minimum Ruby version is now 2.0.0.
+
+As Foreigner is included in Rails 4.2 and above, this patch is only relevant for versions up to Rails 4.1.
+
 ## Installation
 
 Add the following to your Gemfile:
 ```ruby
-gem 'foreigner'
+gem 'foreigner', :git => 'https://github.com/eriksacre/foreigner.git', :branch => 'prepend'
 ```
 ## API Examples
 
